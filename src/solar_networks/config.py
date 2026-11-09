@@ -187,8 +187,17 @@ class Plant:
     economics: Economics | None = None
     supply_point: SupplyPoint | None = None
     aliases: tuple[str, ...] = field(default_factory=tuple)
+    # FusionSolar portal identity (installer account "Inovasecs.r.o.", uni003eu5).
+    fusionsolar_name: str = ""  # plant name exactly as shown in the portal / export filename
+    fusionsolar_ne_id: str = ""  # "NE=<id>" in the plant URL
+    grid_connection: date | None = None  # "Grid Connection Date" in the portal list view
+    portfolio: str = "customer"  # customer | own (Tomas's home plant) | external (not Solar Networks)
 
 
+# FusionSolar list view, 2026-11-09 [DATA]: 12 plants under the installer
+# account. Ecorec (NE=137547094, 390 kWp) is NOT a Solar Networks plant and is
+# deliberately left out. Economics are missing ([CHÝBA]) for every plant except
+# REALCORP 1 until the contracts and offers are collected.
 PLANTS: dict[str, Plant] = {
     "realcorp-rusovska-1": Plant(
         plant_id="realcorp-rusovska-1",
@@ -198,6 +207,9 @@ PLANTS: dict[str, Plant] = {
         battery_kwh=0.0,  # [DATA] no BESS
         client="REALCORP RUSOVSKÁ s.r.o.",
         aliases=("sample-plant-01",),
+        fusionsolar_name="REALCORP RUSOVSKÁ s.r.o.",
+        fusionsolar_ne_id="136493944",
+        grid_connection=date(2023, 5, 24),  # [DATA] FusionSolar
         supply_point=SupplyPoint(
             eic="24ZZS4000026959Q",  # [DATA] invoice MAGNA 09/2026
             label="Bojnická 18, Bratislava – hlavné OM",
@@ -209,17 +221,145 @@ PLANTS: dict[str, Plant] = {
         economics=Economics(
             capex_eur=27_900.50,  # [DATA] cenová ponuka 26. 2. 2023, bez DPH
             capex_inverter_eur=3_200.0,  # [DATA] 2 950 + 250 montáž
-            commissioning=date(2023, 6, 1),  # [PREDPOKLAD] offer Feb 2023; confirm
+            commissioning=date(2023, 5, 24),  # [DATA] FusionSolar grid connection date
             contract_share=0.80,  # [DATA] príloha č. 2
             contract_years=15,  # [PREDPOKLAD] confirm with contract
             opex_eur_year=0.0,  # [PREDPOKLAD] confirm (service, insurance)
             notes=(
-                "Dátum spustenia 06/2023 je odhad z dátumu ponuky a kumulatívnej výroby.",
+                "Dátum spustenia 24. 5. 2023 = dátum pripojenia do siete podľa FusionSolar.",
                 "Dĺžka zmluvy 15 rokov a OPEX 0 €/rok sú predpoklady na potvrdenie.",
             ),
         ),
     ),
+    "realcorp-rusovska-2": Plant(
+        plant_id="realcorp-rusovska-2",
+        name="REALCORP RUSOVSKÁ 2",
+        capacity_kwp=10.86,  # [DATA] FusionSolar
+        battery_kwh=30.0,  # [PREDPOKLAD] the only plant with ESS; portal shows 30 kWh rated ESS in total
+        client="REALCORP RUSOVSKÁ s.r.o.",
+        fusionsolar_name="REALCORP RUSOVSKA s.r.o.2",
+        fusionsolar_ne_id="161696757",
+        grid_connection=date(2024, 11, 19),  # [DATA] FusionSolar
+    ),
+    "decathlon-pharos": Plant(
+        plant_id="decathlon-pharos",
+        name="Decathlon Pharos",
+        capacity_kwp=75.0,  # [DATA] FusionSolar
+        client="Decathlon",
+        fusionsolar_name="Decathlon Pharos",
+        fusionsolar_ne_id="194220894",
+        grid_connection=date(2025, 10, 6),  # [DATA] FusionSolar
+    ),
+    "decathlon-bory": Plant(
+        plant_id="decathlon-bory",
+        name="Decathlon Bory",
+        capacity_kwp=61.0,  # [DATA] FusionSolar
+        client="Decathlon",
+        fusionsolar_name="Decathlon Bory",
+        fusionsolar_ne_id="316113746",
+        grid_connection=date(2026, 7, 30),  # [DATA] FusionSolar
+    ),
+    "saar-bb": Plant(
+        plant_id="saar-bb",
+        name="SAAR BB",
+        capacity_kwp=61.0,  # [DATA] FusionSolar
+        client="SAAR",
+        fusionsolar_name="SAAR BB",
+        fusionsolar_ne_id="331339542",
+        grid_connection=date(2026, 8, 21),  # [DATA] FusionSolar
+    ),
+    "saar-karlofka": Plant(
+        plant_id="saar-karlofka",
+        name="SAAR Karlofka",
+        capacity_kwp=61.0,  # [DATA] FusionSolar
+        client="SAAR",
+        fusionsolar_name="SAAR Karlofka",
+        fusionsolar_ne_id="343852810",
+        grid_connection=date(2026, 9, 8),  # [DATA] FusionSolar
+    ),
+    "comfing": Plant(
+        plant_id="comfing",
+        name="COMFING",
+        capacity_kwp=36.0,  # [DATA] FusionSolar
+        client="COMFING spol. s.r.o.",
+        fusionsolar_name="COMFING spol. s.r.o.",
+        fusionsolar_ne_id="151262916",
+        grid_connection=date(2024, 4, 24),  # [DATA] FusionSolar
+    ),
+    "patriot-telocvicna": Plant(
+        plant_id="patriot-telocvicna",
+        name="PATRIOT real – Telocvičňa",
+        capacity_kwp=23.0,  # [DATA] FusionSolar
+        client="PATRIOT real s.r.o.",
+        fusionsolar_name="PATRIOT real s.r.o. - Telocvičňa",
+        fusionsolar_ne_id="151274748",
+        grid_connection=date(2024, 4, 24),  # [DATA] FusionSolar
+    ),
+    "patriot-skolka": Plant(
+        plant_id="patriot-skolka",
+        name="PATRIOT real – Škôlka",
+        capacity_kwp=4.44,  # [DATA] FusionSolar
+        client="PATRIOT real s.r.o.",
+        fusionsolar_name="PATRIOT real s.r.o. - Škôlka",
+        fusionsolar_ne_id="156084407",
+        grid_connection=date(2024, 8, 7),  # [DATA] FusionSolar
+    ),
+    "viki": Plant(
+        plant_id="viki",
+        name="VIKI",
+        capacity_kwp=7.0,  # [DATA] FusionSolar
+        client="VIKI s.r.o.",
+        fusionsolar_name="VIKI s.r.o.",
+        fusionsolar_ne_id="151471252",
+        grid_connection=date(2024, 4, 29),  # [DATA] FusionSolar
+    ),
+    "tomas-jasso": Plant(
+        plant_id="tomas-jasso",
+        name="Tomas Jasso (dom)",
+        capacity_kwp=9.1,  # [DATA] FusionSolar
+        client="Tomas Jasso",
+        portfolio="own",
+        fusionsolar_name="Tomas Jasso",
+        fusionsolar_ne_id="136936457",
+        grid_connection=date(2023, 8, 16),  # [DATA] FusionSolar
+    ),
 }
+
+FUSIONSOLAR_PORTAL = "https://uni003eu5.fusionsolar.huawei.com/uniportal/pvmswebsite/assets/build/cloud.html"
+FUSIONSOLAR_ZONE = "region-3-9f75916b-fe6a-41d9-9f1d-3bffc6dc492d"
+
+
+def fusionsolar_report_url(plant: Plant) -> str:
+    """Direct link to Report Management of a plant in the FusionSolar portal."""
+    if not plant.fusionsolar_ne_id:
+        raise ValueError(f"Plant {plant.plant_id} has no fusionsolar_ne_id")
+    return (
+        f"{FUSIONSOLAR_PORTAL}?app-id=smartpvms&instance-id=smartpvms&zone-id={FUSIONSOLAR_ZONE}"
+        f"#/view/station/NE={plant.fusionsolar_ne_id}/report"
+    )
+
+
+def plants_for_monthly_export() -> list[Plant]:
+    """Plants whose FusionSolar exports are collected every month (all but external)."""
+    return [p for p in PLANTS.values() if p.portfolio != "external" and p.fusionsolar_ne_id]
+
+
+def plant_id_from_fusionsolar_filename(filename: str) -> str:
+    """Map a portal export filename to a plant_id.
+
+    Portal exports are named ``Plant Report_<plant name>_<MM-YYYY>.xlsx`` (or
+    ``_<YYYY-MM-DD>`` for a daily/hourly export); the plant name may contain
+    underscores-free punctuation such as "s.r.o." or "-".
+    """
+    stem = filename.rsplit(".", 1)[0]
+    if not stem.startswith("Plant Report_"):
+        raise ValueError(f"Not a FusionSolar plant report: {filename}")
+    body = stem[len("Plant Report_") :]
+    name, _, _period = body.rpartition("_")
+    for plant in PLANTS.values():
+        if plant.fusionsolar_name and plant.fusionsolar_name == name:
+            return plant.plant_id
+    raise KeyError(f"No plant with FusionSolar name '{name}' (file {filename})")
 
 # data/samples/ uses the anonymized id; map it to the real plant.
 PLANT_ALIASES: dict[str, str] = {
