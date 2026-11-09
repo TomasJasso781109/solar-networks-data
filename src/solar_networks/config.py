@@ -88,6 +88,78 @@ TARIFF_REALCORP_2026 = Tariff(
 
 
 # --------------------------------------------------------------------------
+# Distribution (ZSD) – reserved capacity rules for NN sadzba C2-X3
+# --------------------------------------------------------------------------
+@dataclass(frozen=True)
+class DistributionTariff:
+    """ZSD 'Cenník za distribúciu elektriny' – items needed for RK analysis.
+
+    [DATA] Západoslovenská distribučná, a.s., Cenník za distribúciu elektriny
+    platný od 1. 1. 2026 do 31. 12. 2026 (rozhodnutie ÚRSO č. 0077/2026/E),
+    sekcia III a) Sadzba C2-X3. Cross-checked against the MAGNA invoice
+    09/2026: 3 × 125 A × 0,2202 = 82,575 €/mes.
+    """
+
+    name: str
+    valid_from: date
+    valid_to: date
+    source: str
+    capacity_fee_eur_per_a_month: float  # tarifa za výkon, per ampere of main breaker (per phase)
+    phases: int  # three-phase: fee = phases × I[A] × rate
+    distribution_eur_kwh: float
+    losses_eur_kwh: float
+    penalty_rk_eur_kw: float  # prekročenie RK za každý prekročený kW / mesiac
+    penalty_mrk_eur_kw: float  # prekročenie MRK
+    min_rk_share_of_mrk: float  # minimálna RK = 50 % MRK
+    rk_lock_months: int  # RK dohodnutá na 12 po sebe nasledujúcich mesiacov
+    line_voltage_v: float = 400.0  # Uz for P = √3·Uz·I·cosφ
+    cos_phi: float = 0.95  # [PREDPOKLAD] reproduces 125 A -> 82,3 kW on the invoice
+
+    def kw_from_amps(self, amps: float) -> float:
+        return (3**0.5) * self.line_voltage_v * amps * self.cos_phi / 1000.0
+
+    def amps_from_kw(self, kw: float) -> float:
+        return kw * 1000.0 / ((3**0.5) * self.line_voltage_v * self.cos_phi)
+
+    def monthly_capacity_fee_eur(self, amps: float) -> float:
+        return self.phases * amps * self.capacity_fee_eur_per_a_month
+
+
+ZSD_C2_X3_2026 = DistributionTariff(
+    name="ZSD C2-X3 2026",
+    valid_from=date(2026, 1, 1),
+    valid_to=date(2026, 12, 31),
+    source=(
+        "Západoslovenská distribučná, a.s. – Cenník za distribúciu elektriny platný "
+        "od 1. 1. 2026 do 31. 12. 2026, časť III a) Sadzba C2-X3 "
+        "(www.zsdis.sk/documents/96353/ZSD-Cennik-za-distribuciu-A5_0126_final.pdf)"
+    ),
+    capacity_fee_eur_per_a_month=0.2202,
+    phases=3,
+    distribution_eur_kwh=0.025939,
+    losses_eur_kwh=0.010468,
+    penalty_rk_eur_kw=33.1939,
+    penalty_mrk_eur_kw=99.5818,
+    min_rk_share_of_mrk=0.50,
+    rk_lock_months=12,
+)
+
+
+@dataclass(frozen=True)
+class SupplyPoint:
+    """Odberné miesto (OM) parameters relevant for reserved-capacity analysis."""
+
+    eic: str
+    label: str
+    main_breaker_a: float  # hlavný istič [A] = MRK on NN
+    reserved_capacity_kw: float  # RK as printed on the invoice
+    reserved_capacity_a: float  # RK in amperes (contracted)
+    distribution: DistributionTariff = ZSD_C2_X3_2026
+    metering_type: str = "A"  # A/B = quarter-hour metering (penalties apply)
+    rk_valid_from: date | None = None  # [PREDPOKLAD] unknown -> confirm
+
+
+# --------------------------------------------------------------------------
 # Plants
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
@@ -113,6 +185,7 @@ class Plant:
     battery_kwh: float = 0.0
     client: str = ""
     economics: Economics | None = None
+    supply_point: SupplyPoint | None = None
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -125,6 +198,14 @@ PLANTS: dict[str, Plant] = {
         battery_kwh=0.0,  # [DATA] no BESS
         client="REALCORP RUSOVSKÁ s.r.o.",
         aliases=("sample-plant-01",),
+        supply_point=SupplyPoint(
+            eic="24ZZS4000026959Q",  # [DATA] invoice MAGNA 09/2026
+            label="Bojnická 18, Bratislava – hlavné OM",
+            main_breaker_a=125.0,  # [DATA]
+            reserved_capacity_kw=82.3,  # [DATA]
+            reserved_capacity_a=125.0,  # [DATA] RK = istič (82,575 € = 3 × 125 × 0,2202)
+            metering_type="A",  # [DATA]
+        ),
         economics=Economics(
             capex_eur=27_900.50,  # [DATA] cenová ponuka 26. 2. 2023, bez DPH
             capex_inverter_eur=3_200.0,  # [DATA] 2 950 + 250 montáž

@@ -43,3 +43,14 @@ def test_plant_alias_resolves():
     assert plant.capacity_kwp == 27.6
     assert plant.economics is not None
     assert plant.economics.capex_eur == pytest.approx(27_900.50)
+
+
+def test_zsd_tariff_reproduces_invoice():
+    from solar_networks.config import ZSD_C2_X3_2026
+
+    t = ZSD_C2_X3_2026
+    assert t.monthly_capacity_fee_eur(125) == pytest.approx(82.575, abs=1e-6)
+    assert t.kw_from_amps(125) == pytest.approx(82.3, abs=0.1)
+    assert t.amps_from_kw(t.kw_from_amps(100)) == pytest.approx(100)
+    assert t.distribution_eur_kwh == TARIFF_REALCORP_2026.distribution_eur_kwh
+    assert t.losses_eur_kwh == TARIFF_REALCORP_2026.losses_eur_kwh
