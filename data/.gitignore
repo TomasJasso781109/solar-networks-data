@@ -1,0 +1,5 @@
+# Everything under data/ is ignored except the anonymized samples.
+*
+!.gitignore
+!samples/
+!samples/**

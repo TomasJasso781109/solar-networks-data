@@ -1,0 +1,20 @@
+# Secrets
+.env
+.env.*
+
+# Real client data – never committed. Only small anonymized samples live in data/samples/.
+data/*
+!data/samples/
+!data/.gitignore
+
+# Generated output
+output/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
