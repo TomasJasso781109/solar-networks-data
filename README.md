@@ -43,3 +43,16 @@ pytest
 - Daily rows are local midnight; months are grouped in Europe/Bratislava time.
 - Some exports lack `Consumption`/`Self-consumption`; those columns are NaN.
 - `Total Yield` is cumulative since commissioning and is ignored.
+
+## ROI report (internal)
+
+```bash
+python scripts/roi_report.py --plant realcorp-rusovska-1          # -> output/roi_<plant>.pdf
+python scripts/roi_report.py --plant realcorp-rusovska-1 --opex 400 --discount-rate 0.08
+```
+
+Economics (CAPEX, tariffs, contract share, commissioning) live in
+`src/solar_networks/config.py`; every value is tagged `[DATA]` or
+`[PREDPOKLAD]`. Rent follows the contract annex formula (`model/rent.py`),
+the ROI model and scenarios follow the internal "FVE návratnosť" methodology
+(`model/roi.py`). The PDF is for the managing directors only.
