@@ -18,3 +18,18 @@ def hourly_oct() -> Path:
 @pytest.fixture
 def hourly_nov1() -> Path:
     return SAMPLES / "sample-plant-01_hourly_2026-11-01.xlsx"
+
+
+@pytest.fixture
+def zsdis_2025() -> Path:
+    return SAMPLES / "zsdis_vzor_2025.xls"
+
+
+@pytest.fixture
+def zsdis_2026() -> Path:
+    return SAMPLES / "zsdis_vzor_2026.xls"
+
+
+@pytest.fixture
+def enmon_oct() -> Path:
+    return SAMPLES / "enmon_vzor_2026-10.xlsx"

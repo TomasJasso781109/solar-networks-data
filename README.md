@@ -8,6 +8,8 @@ Agent context and conventions live in [`CLAUDE.md`](CLAUDE.md).
 ```
 src/solar_networks/
   ingest/fusionsolar.py   # load_export(path) -> tidy UTC DataFrame
+  ingest/zsdis.py         # load_profile(path) -> 15-min DSO profile (.xls), gaps/duplicates check
+  ingest/enmon.py         # load_registers(path) -> meter register readings, recomputed consumption
   model/summary.py        # monthly_summary(df) -> per plant & month totals
   config.py               # plant registry, timezone
 scripts/monthly_summary.py  # summarise data/samples/ -> output/summary.xlsx
@@ -43,6 +45,17 @@ pytest
 - Daily rows are local midnight; months are grouped in Europe/Bratislava time.
 - Some exports lack `Consumption`/`Self-consumption`; those columns are NaN.
 - `Total Yield` is cumulative since commissioning and is ignored.
+
+## Data notes (ZSDIS interval profiles, Enmon registers)
+
+- ZSDIS `.xls`: sheet "Namerané hodnoty"; metadata and the table header are
+  found by text. Values are mean kW per 15 minutes (kWh = value / 4).
+- Spring switch-over day has 92 intervals, autumn 100. The repeated autumn
+  hour carries one extra second (`02:00:01`) and is taken as the second pass.
+- The sheet "Nameraná hodinová práca" is not used (drops an hour in autumn).
+- Enmon `.xlsx`: sheet "Meters", Czech headers, multiplier stored as text and
+  empty when 1. Consumption is recomputed and compared with the file.
+- Sample files are anonymized (EIC, names, serial numbers); values are real.
 
 ## ROI report (internal)
 

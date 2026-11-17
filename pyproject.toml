@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2",
     "openpyxl>=3.1",
+    "xlrd>=2.0",  # legacy .xls exports from the ZSDIS portal
 ]
 
 [project.optional-dependencies]
